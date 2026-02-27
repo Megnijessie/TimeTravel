@@ -1,6 +1,3 @@
-// import logo from './logo.svg';
-// import './App.css';
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Clock, 
@@ -27,7 +24,11 @@ import {
   Fingerprint,
   Activity,
   Globe,
-  Compass
+  Compass,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 
@@ -42,7 +43,7 @@ const destinations = [
     title: 'Paris 1889',
     subtitle: 'La Cité de Fer et de Lumière',
     description: "Vivez l'Exposition Universelle. Admirez la Tour Eiffel en construction et les 56 000 becs de gaz parisiens.",
-    longDescription: "Paris, 1889. Le monde entier converge vers le Champ-de-Mars pour l'Exposition Universelle. Entre les structures métalliques de la Galerie des Machines et l'élégance de la Belle Époque, découvrez une capitale à l'apogée de son influence.",
+    longDescription: "Paris, 1889. Le monde entier converge vers le Champ-de-Mars pour l'Exposition Universelle. Entre les structures métalliques audacieuses de la Galerie des Machines et l'élégance de la Belle Époque, découvrez une capitale à l'apogée de son influence.",
     historicalDetails: [
       "Tour Eiffel : Érigée pour l'Expo, culminant à plus de 300m.",
       "Galerie des Machines : Nef métallique monumentale de 420m de long.",
@@ -96,14 +97,14 @@ const destinations = [
   }
 ];
 
-// --- COMPOSANTS DE BASE ---
+// --- COMPOSANTS UI ---
 
 const Button = ({ children, onClick, variant = 'primary', className = '', type="button" }) => {
   const variants = {
     primary: 'bg-amber-500 hover:bg-amber-400 text-black font-black shadow-[0_0_20px_rgba(245,158,11,0.3)]',
     outline: 'border border-amber-500/50 hover:border-amber-500 text-amber-500 bg-amber-500/5',
     ghost: 'hover:bg-white/5 text-zinc-400 hover:text-white',
-    highlight: 'border-2 border-amber-500 text-amber-500 bg-amber-500/10 shadow-[0_0_50px_rgba(245,158,11,0.4)] backdrop-blur-xl hover:bg-amber-500/20'
+    highlight: 'border-2 border-amber-500 text-amber-500 bg-amber-500/10 shadow-[0_0_40px_rgba(245,158,11,0.3)] backdrop-blur-xl hover:bg-amber-500/20'
   };
   return (
     <motion.button 
@@ -152,7 +153,7 @@ const MagneticButton = ({ children, onClick, variant = 'primary', className = ''
     primary: 'bg-amber-500 text-black shadow-[0_0_30px_rgba(245,158,11,0.4)]',
     outline: 'border border-amber-500/50 text-amber-500 bg-amber-500/5 backdrop-blur-md',
     ghost: 'text-zinc-400 hover:text-white hover:bg-white/5',
-    highlight: 'border-2 border-amber-400 text-amber-400 bg-amber-500/20 shadow-[0_0_60px_rgba(245,158,11,0.6)] backdrop-blur-xl hover:bg-amber-500/30'
+    highlight: 'border-2 border-amber-500 text-amber-500 bg-amber-500/10 shadow-[0_0_60px_rgba(245,158,11,0.4)] backdrop-blur-xl hover:bg-amber-500/30'
   };
 
   return (
@@ -170,12 +171,12 @@ const MagneticButton = ({ children, onClick, variant = 'primary', className = ''
           <motion.div 
             animate={{ x: [-300, 300] }} 
             transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
-            className="absolute inset-0 w-24 bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12" 
+            className="absolute inset-0 w-24 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" 
           />
           <motion.div
             animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(245,158,11,0.8),0_0_40px_rgba(245,158,11,0.4)]"
+            className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(245,158,11,0.5),0_0_40px_rgba(245,158,11,0.3)]"
           />
         </>
       )}
@@ -278,7 +279,7 @@ const QuizIA = ({ onComplete, onCancel }) => {
       </div>
       <div className="space-y-10">
         <div className="space-y-2">
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest text-amber-500">Question {step + 1}/2</p>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest text-amber-500">Étape {step + 1}/2</p>
           <p className="text-2xl text-white font-black uppercase tracking-tight leading-snug">
             {step === 0 ? "Quel stimuli sensoriel privilégiez-vous ?" : "Votre idéal de grandeur ?"}
           </p>
@@ -300,10 +301,10 @@ const QuizIA = ({ onComplete, onCancel }) => {
   );
 };
 
-// --- CHATBOT IA ---
+// --- CHATBOT IA FONCTIONNEL ---
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: 'assistant', content: "Bonjour. Comment puis-je vous renseigner ?" }]);
+  const [messages, setMessages] = useState([{ role: 'assistant', content: "Bonjour ! Comment puis-je vous aider pour votre voyage ?" }]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
@@ -312,22 +313,26 @@ const ChatBot = () => {
     if (isOpen) setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }, [messages, isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const msg = input; setInput("");
-    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+  const callGemini = async (text) => {
     setIsTyping(true);
     const system = "Tu es l'assistant de TimeTravel Agency. Réponds de manière normale, simple et très directe aux questions. Sois très bref (1 phrase). Réponds en français.";
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: `System: ${system}\nUser: ${msg}` }] }] })
+        body: JSON.stringify({ contents: [{ parts: [{ text: `System: ${system}\nUser: ${text}` }] }] })
       });
       const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur." }]);
-    } catch (e) { setMessages(prev => [...prev, { role: 'assistant', content: "Indisponible." }]); }
-    setIsTyping(false);
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur.";
+    } catch (e) { return "Indisponible."; } finally { setIsTyping(false); }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const msg = input; setInput("");
+    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    const res = await callGemini(msg);
+    setMessages(prev => [...prev, { role: 'assistant', content: res }]);
   };
 
   return (
@@ -348,11 +353,11 @@ const ChatBot = () => {
                   <div className={`max-w-[85%] p-4 rounded-[24px] text-sm ${m.role === 'user' ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 text-zinc-300 border border-white/5'}`}>{m.content}</div>
                 </div>
               ))}
-              {isTyping && <div className="text-amber-500 text-xs animate-pulse">Assistant réfléchit...</div>}
+              {isTyping && <div className="text-amber-500 text-xs animate-pulse">Réflexion...</div>}
               <div ref={chatEndRef} />
             </div>
             <div className="p-6 bg-black/40 flex gap-4">
-              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} className="flex-1 bg-white/5 border-none rounded-2xl px-6 py-4 text-sm" placeholder="Question..." />
+              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} className="flex-1 bg-white/5 border-none rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" placeholder="Question..." />
               <button onClick={handleSend} className="bg-amber-500 p-4 rounded-2xl text-black"><Send className="w-5 h-5" /></button>
             </div>
           </motion.div>
@@ -415,21 +420,13 @@ export default function App() {
                     <img src="https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nebula" />
                   </motion.div>
                 </div>
-                
                 <div className="relative z-20 text-center max-w-6xl">
                   <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                     <span className="inline-block px-8 py-2 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500 text-[10px] font-black tracking-[0.8em] mb-12 uppercase">Le Temps est une Illusion</span>
                     <h1 className="text-7xl md:text-[140px] font-black mb-12 tracking-tighter leading-[0.75] uppercase text-white">L'HISTOIRE <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-500 to-amber-200 animate-gradient-x">RÉINVENTÉE</span></h1>
-                    
                     <div className="flex flex-col sm:flex-row gap-12 justify-center items-center mt-12">
-                      <MagneticButton onClick={() => scrollToSection('destinations')}>
-                        Explorer
-                      </MagneticButton>
-                      
-                      {/* BOUTON PROFIL TEMPOREL EN ÉVIDENCE ABSOLUE */}
-                      <MagneticButton onClick={() => setView('quiz')} variant="highlight" className="scale-150 border-amber-400 z-10">
-                        Profil Temporel <ChevronRight className="w-4 h-4" />
-                      </MagneticButton>
+                      <MagneticButton onClick={() => scrollToSection('destinations')}>Explorer</MagneticButton>
+                      <MagneticButton onClick={() => setView('quiz')} variant="highlight" className="scale-150 border-amber-400 z-10">Profil Temporel <ChevronRight className="w-4 h-4" /></MagneticButton>
                     </div>
                   </motion.div>
                 </div>
@@ -476,12 +473,7 @@ export default function App() {
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-start">
                 <div className="relative aspect-[3/4] rounded-[80px] overflow-hidden shadow-2xl group">
-                  <SafeImage 
-                    src={selectedDest.image} 
-                    fallback={selectedDest.fallback}
-                    alt={selectedDest.title}
-                    className="w-full h-full object-cover" 
-                  />
+                  <SafeImage src={selectedDest.image} fallback={selectedDest.fallback} alt={selectedDest.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-16 left-16 right-16 p-12 bg-black/40 backdrop-blur-3xl rounded-[50px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
                     <div className="flex justify-between items-end">
@@ -554,15 +546,78 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <footer className="mt-60 py-40 border-t border-white/5 bg-black px-8">
-        <div className="max-w-[1600px] mx-auto text-center lg:text-left">
-          <div className="flex items-center gap-6 justify-center lg:justify-start mb-10">
-            <div className="bg-amber-500 p-3 rounded-2xl"><Clock className="text-black w-8 h-8" /></div>
-            <span className="text-4xl font-black tracking-tighter uppercase">TIMETRAVEL</span>
+      {/* PIED DE PAGE MONUMENTAL (FOOTER) */}
+      <footer className="mt-80 bg-zinc-950 border-t border-white/5 px-8 py-40">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
+            {/* Colonne 1: Identité */}
+            <div className="space-y-10 text-center lg:text-left">
+              <div className="flex items-center gap-6 justify-center lg:justify-start">
+                <div className="bg-amber-500 p-3 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                  <Clock className="text-black w-8 h-8" />
+                </div>
+                <span className="text-4xl font-black tracking-tighter uppercase tracking-[0.2em]">TIMETRAVEL</span>
+              </div>
+              <p className="text-zinc-500 text-lg font-light leading-relaxed max-w-sm mx-auto lg:mx-0">
+                La première agence certifiée par le Consortium Temporel Mondial. Redécouvrez l'histoire comme jamais auparavant.
+              </p>
+              <div className="flex gap-6 justify-center lg:justify-start">
+                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Instagram /></motion.a>
+                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Twitter /></motion.a>
+                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Linkedin /></motion.a>
+                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Youtube /></motion.a>
+              </div>
+            </div>
+
+            {/* Colonne 2: Univers */}
+            <div className="space-y-8 text-center lg:text-left">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Exploration</h4>
+              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
+                <li className="hover:text-white cursor-pointer transition-colors">Notre Manifeste</li>
+                <li className="hover:text-white cursor-pointer transition-colors">Vaisseaux & Technologie</li>
+                <li className="hover:text-white cursor-pointer transition-colors">Sécurité Temporelle</li>
+                <li className="hover:text-white cursor-pointer transition-colors">Galerie des Archives</li>
+              </ul>
+            </div>
+
+            {/* Colonne 3: Destinations */}
+            <div className="space-y-8 text-center lg:text-left">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Destinations</h4>
+              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
+                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Paris 1889</li>
+                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Crétacé Supérieur</li>
+                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Florence 1504</li>
+                <li className="hover:text-amber-500/50 cursor-not-allowed transition-colors italic">Égypte Antique (Bientôt)</li>
+              </ul>
+            </div>
+
+            {/* Colonne 4: Légal */}
+            <div className="space-y-8 text-center lg:text-left">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Consortium</h4>
+              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                75007 Paris, Présent <br /> Secteur Alpha-1, Terminal Principal.
+              </p>
+              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
+                <li className="hover:text-white cursor-pointer transition-colors">Protocoles de Paradoxe</li>
+                <li className="hover:text-white cursor-pointer transition-colors">Charte Éthique</li>
+                <li className="hover:text-white cursor-pointer transition-colors">Assurance Relativiste</li>
+              </ul>
+            </div>
           </div>
-          <p className="text-zinc-600 max-w-md text-xl font-light leading-relaxed mx-auto lg:mx-0">Explorer le passé pour mieux comprendre le présent.</p>
+
+          <div className="pt-20 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-800">
+              © 2024 TIMETRAVEL AGENCY — IA M1/M2 FINAL PROJECT
+            </div>
+            <div className="flex gap-10 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Confidentialité</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Conditions</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Cookies</span>
+            </div>
+          </div>
         </div>
       </footer>
+
       <ChatBot />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes gradient-x { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
@@ -573,5 +628,3 @@ export default function App() {
     </div>
   );
 }
-
-// export default App;
