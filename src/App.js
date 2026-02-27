@@ -28,7 +28,10 @@ import {
   Instagram,
   Twitter,
   Linkedin,
-  Youtube
+  Youtube,
+  ShieldAlert,
+  Rocket,
+  UserCheck
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 
@@ -36,7 +39,7 @@ import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 const apiKey = ""; 
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
-// --- DONNÉES HISTORIQUES AVEC VOS IMAGES ET FALLBACKS ---
+// --- DONNÉES HISTORIQUES ---
 const destinations = [
   {
     id: 'paris-1889',
@@ -50,7 +53,7 @@ const destinations = [
       "Mode : Silhouette en 'S' et chapeaux surdimensionnés.",
       "Lumière : Éclairage par 56 573 becs de gaz parisiens."
     ],
-    image: "paris1889_hero_16_9.jpg",
+    image: "/paris1889_hero_16_9.png",
     fallback: "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?q=80&w=1000&auto=format&fit=crop",
     color: "from-amber-200 to-amber-500",
     icon: <Tower className="w-6 h-6" />,
@@ -69,7 +72,7 @@ const destinations = [
       "Climat : Chaud, humide, sans calottes glaciaires aux pôles.",
       "Ciel : Activité volcanique intense et nuits étoilées."
     ],
-    image: "cretace_hero_16_9.jpg",
+    image: "/cretace_hero_16_9.png",
     fallback: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop",
     color: "from-green-400 to-emerald-700",
     icon: <Trees className="w-6 h-6" />,
@@ -88,7 +91,7 @@ const destinations = [
       "Mode : Robes en soie brodée et velours luxueux.",
       "Esprit : Naissance de l'humanisme moderne."
     ],
-    image: "florence1504_hero_16_9.jpg",
+    image: "/florence1504_hero_16_9.png",
     fallback: "https://images.unsplash.com/photo-1534445161038-038234676527?q=80&w=1000&auto=format&fit=crop",
     color: "from-red-400 to-rose-700",
     icon: <Palette className="w-6 h-6" />,
@@ -98,6 +101,19 @@ const destinations = [
 ];
 
 // --- COMPOSANTS UI ---
+
+const SafeImage = ({ src, fallback, alt, className, layoutId }) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  return (
+    <motion.img 
+      layoutId={layoutId}
+      src={imgSrc} 
+      onError={() => setImgSrc(fallback)}
+      alt={alt}
+      className={className}
+    />
+  );
+};
 
 const Button = ({ children, onClick, variant = 'primary', className = '', type="button" }) => {
   const variants = {
@@ -153,7 +169,7 @@ const MagneticButton = ({ children, onClick, variant = 'primary', className = ''
     primary: 'bg-amber-500 text-black shadow-[0_0_30px_rgba(245,158,11,0.4)]',
     outline: 'border border-amber-500/50 text-amber-500 bg-amber-500/5 backdrop-blur-md',
     ghost: 'text-zinc-400 hover:text-white hover:bg-white/5',
-    highlight: 'border-2 border-amber-500 text-amber-500 bg-amber-500/10 shadow-[0_0_60px_rgba(245,158,11,0.4)] backdrop-blur-xl hover:bg-amber-500/30'
+    highlight: 'border-2 border-amber-500 text-amber-500 bg-amber-500/10 shadow-[0_0_40px_rgba(245,158,11,0.3)] backdrop-blur-xl hover:bg-amber-500/20'
   };
 
   return (
@@ -167,18 +183,11 @@ const MagneticButton = ({ children, onClick, variant = 'primary', className = ''
       className={`relative px-10 py-5 rounded-full font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 overflow-hidden ${variants[variant]} ${className}`}
     >
       {variant === 'highlight' && (
-        <>
-          <motion.div 
-            animate={{ x: [-300, 300] }} 
-            transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
-            className="absolute inset-0 w-24 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" 
-          />
-          <motion.div
-            animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(245,158,11,0.5),0_0_40px_rgba(245,158,11,0.3)]"
-          />
-        </>
+        <motion.div 
+          animate={{ x: [-300, 300] }} 
+          transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+          className="absolute inset-0 w-24 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" 
+        />
       )}
       {children}
     </motion.button>
@@ -189,18 +198,6 @@ const ScrollProgress = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   return <motion.div className="fixed top-0 left-0 right-0 h-1 bg-amber-500 z-[100] origin-left" style={{ scaleX }} />;
-};
-
-const SafeImage = ({ src, fallback, alt, className }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  return (
-    <motion.img 
-      src={imgSrc} 
-      onError={() => setImgSrc(fallback)}
-      alt={alt}
-      className={className}
-    />
-  );
 };
 
 const InteractiveCard = ({ dest, onClick, idx }) => {
@@ -216,11 +213,11 @@ const InteractiveCard = ({ dest, onClick, idx }) => {
     >
       <SafeImage 
         src={dest.image} 
-        fallback={dest.fallback}
-        alt={dest.title}
+        fallback={dest.fallback} 
+        alt={dest.title} 
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 grayscale-[10%] group-hover:grayscale-0" 
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-90 group-hover:opacity-60 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
       <div className="absolute inset-0 border-[20px] border-transparent group-hover:border-amber-500/10 transition-all duration-700 rounded-[60px]" />
       
       <div className="absolute bottom-0 p-12 w-full">
@@ -239,72 +236,10 @@ const InteractiveCard = ({ dest, onClick, idx }) => {
   );
 };
 
-// --- FEATURE IA : QUIZ ---
-const QuizIA = ({ onComplete, onCancel }) => {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  const handleSelect = (val) => {
-    const newAnswers = [...answers, val];
-    if (step < 1) {
-      setAnswers(newAnswers);
-      setStep(step + 1);
-    } else {
-      setIsAnalyzing(true);
-      setTimeout(() => {
-        onComplete(val);
-      }, 1500);
-    }
-  };
-
-  if (isAnalyzing) return (
-    <div className="text-center p-20 bg-zinc-900/50 rounded-[40px] border border-amber-500/20 backdrop-blur-xl">
-      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="mb-8 inline-block">
-        <Sparkles className="w-16 h-16 text-amber-500" />
-      </motion.div>
-      <h3 className="text-2xl font-bold mb-2 uppercase tracking-tighter">Analyse en cours...</h3>
-      <p className="text-zinc-500 animate-pulse text-xs uppercase tracking-widest">Calcul de votre destination</p>
-    </div>
-  );
-
-  return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto bg-zinc-900/80 border border-white/10 p-12 rounded-[50px] backdrop-blur-3xl shadow-2xl">
-      <div className="flex justify-between items-center mb-12">
-        <div className="flex items-center gap-3 text-amber-500">
-          <Fingerprint />
-          <h3 className="text-xs font-black uppercase tracking-[0.3em]">Profil Voyageur IA</h3>
-        </div>
-        <button onClick={onCancel} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5" /></button>
-      </div>
-      <div className="space-y-10">
-        <div className="space-y-2">
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest text-amber-500">Étape {step + 1}/2</p>
-          <p className="text-2xl text-white font-black uppercase tracking-tight leading-snug">
-            {step === 0 ? "Quel stimuli sensoriel privilégiez-vous ?" : "Votre idéal de grandeur ?"}
-          </p>
-        </div>
-        <div className="grid gap-4">
-          {[
-            { text: step === 0 ? "L'odeur du fer et du gaz" : "Le triomphe industriel", value: "paris-1889" },
-            { text: step === 0 ? "L'humidité d'une forêt vierge" : "La puissance primitive", value: "cretace" },
-            { text: step === 0 ? "Le toucher du velours" : "L'harmonie artistique", value: "florence-1504" }
-          ].map((opt, i) => (
-            <motion.button key={i} whileHover={{ x: 10, backgroundColor: "rgba(245,158,11,0.1)" }} onClick={() => handleSelect(opt.value)} className="p-6 text-left rounded-2xl border border-white/5 bg-white/5 transition-all flex justify-between items-center group">
-              <span className="font-bold text-sm tracking-tight">{opt.text}</span>
-              <ChevronRight className="w-5 h-5 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
 // --- CHATBOT IA FONCTIONNEL ---
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: 'assistant', content: "Bonjour ! Comment puis-je vous aider pour votre voyage ?" }]);
+  const [messages, setMessages] = useState([{ role: 'assistant', content: "Bonjour ! Comment puis-je vous aider ?" }]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
@@ -315,7 +250,7 @@ const ChatBot = () => {
 
   const callGemini = async (text) => {
     setIsTyping(true);
-    const system = "Tu es l'assistant de TimeTravel Agency. Réponds de manière normale, simple et très directe aux questions. Sois très bref (1 phrase). Réponds en français.";
+    const system = "Tu es l'assistant de TimeTravel Agency. Réponds très brièvement (1 phrase). Réponds en français.";
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -339,31 +274,27 @@ const ChatBot = () => {
     <div className="fixed bottom-10 right-10 z-[100]">
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, y: 100, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 100, scale: 0.8 }} className="bg-black/80 border border-white/10 w-[400px] h-[550px] rounded-[40px] shadow-2xl flex flex-col mb-6 overflow-hidden backdrop-blur-3xl">
+          <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }} className="bg-black/80 border border-white/10 w-[400px] h-[550px] rounded-[40px] shadow-2xl flex flex-col mb-6 overflow-hidden backdrop-blur-3xl">
             <div className="p-8 border-b border-white/5 flex justify-between items-center bg-zinc-900">
-              <div className="flex items-center gap-4">
-                <div className="bg-amber-500 p-2 rounded-xl"><Activity className="text-black w-5 h-5" /></div>
-                <span className="font-black text-[10px] uppercase tracking-[0.3em] text-white">ASSISTANT IA</span>
-              </div>
+              <span className="font-black text-[10px] uppercase tracking-[0.3em] text-white">ASSISTANT IA</span>
               <button onClick={() => setIsOpen(false)}><X /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-[24px] text-sm ${m.role === 'user' ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 text-zinc-300 border border-white/5'}`}>{m.content}</div>
+                  <div className={`max-w-[85%] p-5 rounded-[28px] text-sm ${m.role === 'user' ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 text-zinc-300'}`}>{m.content}</div>
                 </div>
               ))}
-              {isTyping && <div className="text-amber-500 text-xs animate-pulse">Réflexion...</div>}
               <div ref={chatEndRef} />
             </div>
-            <div className="p-6 bg-black/40 flex gap-4">
-              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} className="flex-1 bg-white/5 border-none rounded-2xl px-6 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" placeholder="Question..." />
-              <button onClick={handleSend} className="bg-amber-500 p-4 rounded-2xl text-black"><Send className="w-5 h-5" /></button>
+            <div className="p-8 bg-black/40 flex gap-4">
+              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} className="flex-1 bg-white/5 rounded-2xl px-6 py-4 text-sm" placeholder="Question..." />
+              <button onClick={handleSend} className="bg-amber-500 p-4 rounded-2xl text-black shadow-lg"><Send className="w-5 h-5" /></button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      <button onClick={() => setIsOpen(!isOpen)} className="bg-amber-500 p-6 rounded-full text-black shadow-[0_0_40px_rgba(245,158,11,0.4)] hover:scale-110 transition-transform"><MessageSquare /></button>
+      <button onClick={() => setIsOpen(!isOpen)} className="bg-amber-500 p-6 rounded-full text-black shadow-lg hover:scale-110 transition-transform"><MessageSquare /></button>
     </div>
   );
 };
@@ -376,6 +307,7 @@ export default function App() {
   const [recommendedId, setRecommendedId] = useState(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [activeService, setActiveService] = useState(null);
 
   const navigateToDest = (dest) => {
     setSelectedDest(dest);
@@ -385,15 +317,23 @@ export default function App() {
   };
 
   const scrollToSection = (id, delay = 0) => {
+    if (view !== 'home') setView('home');
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) element.scrollIntoView({ behavior: 'smooth' });
     }, delay);
   };
 
+  const serviceInfo = {
+    'paradox': { title: 'Assurance Paradoxe', icon: <ShieldAlert />, desc: 'Protection totale contre les boucles temporelles. En cas de paradoxe, notre système vous extrait instantanément vers une timeline refuge.' },
+    'alpha': { title: 'Vaisseaux Alpha', icon: <Rocket />, desc: 'La pointe de la technologie spatio-temporelle. Moteurs à courbure chronale certifiés pour des sauts de plus de 100 millions d\'années.' },
+    'guide': { title: 'Guide Expert', icon: <UserCheck />, desc: 'Des historiens et ethnologues de classe mondiale vous accompagnent pour garantir une immersion authentique et sécurisée.' }
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-amber-500/30 overflow-x-hidden">
       <ScrollProgress />
+      
       <nav className="fixed top-0 w-full z-50 px-8 py-8 pointer-events-none">
         <div className="max-w-7xl mx-auto flex justify-between items-center pointer-events-auto">
           <div className="flex items-center gap-4 cursor-pointer bg-black/40 backdrop-blur-3xl px-6 py-3 rounded-full border border-white/10" onClick={() => {setView('home'); setRecommendedId(null);}}>
@@ -401,9 +341,9 @@ export default function App() {
             <span className="text-xl font-black tracking-tighter uppercase">TIMETRAVEL</span>
           </div>
           <div className="hidden lg:flex gap-4 p-2 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10">
-            <button onClick={() => setView('home')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${view === 'home' ? 'bg-amber-500 text-black' : 'hover:text-amber-500'}`}>Univers</button>
-            <button onClick={() => { setView('home'); scrollToSection('destinations', 100); }} className="px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-amber-500">Expéditions</button>
-            <button onClick={() => setView('quiz')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${view === 'quiz' ? 'bg-amber-500 text-black' : 'hover:text-amber-500'}`}>Expertise IA</button>
+            <button onClick={() => setView('home')} className="px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all">Univers</button>
+            <button onClick={() => scrollToSection('destinations', 100)} className="px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-amber-500">Expéditions</button>
+            <button onClick={() => setView('quiz')} className="px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all">Expertise IA</button>
           </div>
           <MagneticButton onClick={() => setView('quiz')} variant="highlight" className="hidden sm:flex py-3 px-8 text-[10px]">Démarrer</MagneticButton>
         </div>
@@ -413,13 +353,20 @@ export default function App() {
         <AnimatePresence mode="wait">
           {view === 'home' && (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {/* Hero Section Cinématique - FOND ORIGINAL RESTAURÉ */}
               <section className="relative h-screen flex items-center justify-center overflow-hidden px-8">
                 <div className="absolute inset-0 z-0">
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black z-10" />
-                  <motion.div initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse' }} className="w-full h-full">
-                    <img src="https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nebula" />
+                  <motion.div 
+                    initial={{ scale: 1.1 }} 
+                    animate={{ scale: 1 }} 
+                    transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse' }}
+                    className="w-full h-full"
+                  >
+                    <img src="https://images.unsplash.com/photo-1464802686167-b939a6910659?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nébuleuse" />
                   </motion.div>
                 </div>
+                
                 <div className="relative z-20 text-center max-w-6xl">
                   <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                     <span className="inline-block px-8 py-2 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500 text-[10px] font-black tracking-[0.8em] mb-12 uppercase">Le Temps est une Illusion</span>
@@ -432,6 +379,7 @@ export default function App() {
                 </div>
               </section>
 
+              {/* Destinations Gallery */}
               <section id="destinations" className="py-60 px-8 max-w-[1600px] mx-auto">
                 <SectionTitle subtitle="03 Expéditions Exclusives">Horizons Temporels</SectionTitle>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
@@ -440,37 +388,43 @@ export default function App() {
                   ))}
                 </div>
               </section>
-            </motion.div>
-          )}
 
-          {view === 'quiz' && (
-            <motion.div key="quiz" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex items-center justify-center bg-black px-8">
-               {recommendedId ? (
-                <div className="text-center max-w-4xl bg-zinc-900/20 p-20 rounded-[80px] border border-amber-500/20 backdrop-blur-3xl shadow-2xl">
-                  <div className="bg-amber-500 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-12 shadow-[0_0_50px_rgba(245,158,11,0.5)]">
-                    <CheckCircle2 className="text-black w-12 h-12" />
-                  </div>
-                  <h2 className="text-6xl font-black mb-6 tracking-tighter uppercase leading-none">RÉSONANCE ÉTABLIE</h2>
-                  <div className="flex flex-col md:flex-row items-center gap-12 p-10 bg-black/60 rounded-[50px] mb-16 border border-white/5 text-left">
-                    <SafeImage src={destinations.find(d => d.id === recommendedId).image} fallback={destinations.find(d => d.id === recommendedId).fallback} className="w-56 h-56 rounded-[40px] object-cover shadow-2xl" />
-                    <div className="flex-1">
-                      <h4 className="text-5xl font-black mb-2 tracking-tighter uppercase">{destinations.find(d => d.id === recommendedId).title}</h4>
-                      <p className="text-amber-500 font-black text-[10px] uppercase tracking-[0.4em] mb-8">{destinations.find(d => d.id === recommendedId).subtitle}</p>
-                      <Button onClick={() => navigateToDest(destinations.find(d => d.id === recommendedId))}>Accéder à l'Histoire</Button>
+              {/* Section Héritage (Comble l'espace vide) */}
+              <section className="py-40 bg-zinc-950 relative overflow-hidden">
+                <div className="max-w-[1400px] mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
+                  <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+                    <SectionTitle subtitle="Sécurité Alpha">Un Héritage d'Excellence</SectionTitle>
+                    <p className="text-zinc-500 text-xl font-light leading-relaxed mb-12">
+                      Depuis plus de deux décennies, TimeTravel Agency définit les standards du voyage chronologique de luxe. Nos protocoles de sécurité garantissent une protection absolue contre les altérations historiques.
+                    </p>
+                    <div className="grid grid-cols-2 gap-12">
+                      <div>
+                        <h4 className="text-5xl font-black text-amber-500 mb-2">12k+</h4>
+                        <p className="text-[10px] uppercase font-black text-zinc-600 tracking-widest">Sauts Réussis</p>
+                      </div>
+                      <div>
+                        <h4 className="text-5xl font-black text-amber-500 mb-2">0.0%</h4>
+                        <p className="text-[10px] uppercase font-black text-zinc-600 tracking-widest">Incident Temporel</p>
+                      </div>
                     </div>
-                  </div>
-                  <button onClick={() => setRecommendedId(null)} className="text-zinc-600 hover:text-white text-[10px] font-black uppercase tracking-[0.5em]">Recommencer</button>
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
+                    <div className="aspect-square rounded-[60px] bg-gradient-to-br from-amber-500/10 to-transparent border border-white/5 flex items-center justify-center">
+                      <div className="text-center p-20">
+                        <Activity className="w-20 h-20 text-amber-500 mx-auto mb-8 animate-pulse" />
+                        <h3 className="text-3xl font-black uppercase mb-4 tracking-tighter">Monitoring Chronal</h3>
+                        <p className="text-zinc-500 text-sm font-medium">Chaque seconde de votre séjour est surveillée par notre IA centrale pour prévenir toute déviation historique.</p>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
-              ) : (
-                <QuizIA onComplete={setRecommendedId} onCancel={() => setView('home')} />
-              )}
+              </section>
             </motion.div>
           )}
 
           {view === 'destination' && selectedDest && (
             <motion.div key="dest" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="max-w-7xl mx-auto px-8 py-40">
               <button onClick={() => setView('home')} className="flex items-center gap-4 text-zinc-500 hover:text-amber-500 mb-24 font-black uppercase text-[10px] tracking-[0.4em] group transition-all"><ChevronLeft className="group-hover:-translate-x-2 transition-transform" /> Retour</button>
-              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-start">
                 <div className="relative aspect-[3/4] rounded-[80px] overflow-hidden shadow-2xl group">
                   <SafeImage src={selectedDest.image} fallback={selectedDest.fallback} alt={selectedDest.title} className="w-full h-full object-cover" />
@@ -485,7 +439,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-20 py-10">
                   <div className="space-y-6">
                     <h1 className="text-8xl md:text-[120px] font-black mb-6 tracking-tighter leading-[0.8] uppercase">{selectedDest.title}</h1>
@@ -510,6 +463,44 @@ export default function App() {
               </div>
             </motion.div>
           )}
+
+          {view === 'quiz' && (
+            <motion.div key="quiz" initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex items-center justify-center bg-black px-8">
+               {recommendedId ? (
+                <div className="text-center max-w-4xl bg-zinc-900/20 p-20 rounded-[80px] border border-amber-500/20 backdrop-blur-3xl shadow-2xl">
+                  <div className="bg-amber-500 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-12 shadow-[0_0_50px_rgba(245,158,11,0.5)]">
+                    <CheckCircle2 className="text-black w-12 h-12" />
+                  </div>
+                  <h2 className="text-6xl font-black mb-6 tracking-tighter uppercase leading-none">RÉSONANCE ÉTABLIE</h2>
+                  <div className="flex flex-col md:flex-row items-center gap-12 p-10 bg-black/60 rounded-[50px] mb-16 border border-white/5 text-left">
+                    <SafeImage src={destinations.find(d => d.id === recommendedId).image} fallback={destinations.find(d => d.id === recommendedId).fallback} className="w-56 h-56 rounded-[40px] object-cover shadow-2xl" />
+                    <div className="flex-1">
+                      <h4 className="text-5xl font-black mb-2 tracking-tighter uppercase">{destinations.find(d => d.id === recommendedId).title}</h4>
+                      <p className="text-amber-500 font-black text-[10px] uppercase tracking-[0.4em] mb-8">{destinations.find(d => d.id === recommendedId).subtitle}</p>
+                      <Button onClick={() => navigateToDest(destinations.find(d => d.id === recommendedId))}>Accéder à l'Histoire</Button>
+                    </div>
+                  </div>
+                  <button onClick={() => setRecommendedId(null)} className="text-zinc-600 hover:text-white text-[10px] font-black uppercase tracking-[0.5em]">Recommencer</button>
+                </div>
+              ) : (
+                <div className="max-w-2xl mx-auto p-12 bg-zinc-900/80 border border-white/10 rounded-[50px] backdrop-blur-3xl shadow-2xl text-center">
+                   <h3 className="text-4xl font-black uppercase tracking-tighter mb-10 text-amber-500">Profil Voyageur</h3>
+                   <div className="grid gap-4">
+                     {[
+                       { text: "L'odeur du fer et du gaz (Paris)", value: "paris-1889" },
+                       { text: "L'humidité d'une forêt vierge (Crétacé)", value: "cretace" },
+                       { text: "Le toucher du velours précieux (Florence)", value: "florence-1504" }
+                     ].map((opt, i) => (
+                       <motion.button key={i} whileHover={{ x: 10, backgroundColor: "rgba(245,158,11,0.1)" }} onClick={() => setRecommendedId(opt.value)} className="p-6 text-left rounded-2xl border border-white/5 bg-white/5 transition-all flex justify-between items-center group">
+                         <span className="font-bold text-sm tracking-tight">{opt.text}</span>
+                         <ChevronRight className="w-5 h-5 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       </motion.button>
+                     ))}
+                   </div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -518,102 +509,101 @@ export default function App() {
         {isBooking && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-8">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setIsBooking(false)} />
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="relative bg-zinc-900/80 w-full max-w-2xl rounded-[80px] border border-white/10 p-20 text-center backdrop-blur-3xl shadow-[0_0_200px_rgba(0,0,0,1)]">
-              {!bookingConfirmed ? (
-                <>
-                  <div className="bg-amber-500 w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto mb-12 shadow-[0_20px_50px_rgba(245,158,11,0.4)]">
-                    <Fingerprint className="text-black w-12 h-12" />
-                  </div>
-                  <h3 className="text-5xl font-black mb-4 tracking-tighter uppercase leading-none">AUTHENTIFICATION</h3>
-                  <p className="text-zinc-500 mb-16 font-light text-lg">Confirmez votre empreinte pour initialiser le saut vers <span className="text-amber-500 font-black">{selectedDest?.title}</span>.</p>
-                  <div className="space-y-6">
-                    <Button className="w-full py-6 text-xl" onClick={() => setBookingConfirmed(true)}>Confirmer l'empreinte</Button>
-                    <button onClick={() => setIsBooking(false)} className="text-zinc-700 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.5em]">Annuler l'Expédition</button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="bg-green-500 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-12 shadow-[0_0_50px_rgba(34,197,94,0.3)]">
-                    <CheckCircle2 className="text-black w-12 h-12" />
-                  </motion.div>
-                  <h3 className="text-5xl font-black mb-4 tracking-tighter uppercase leading-none">VOYAGE CONFIRMÉ</h3>
-                  <p className="text-zinc-400 mb-16 font-light text-lg">Votre passage vers <span className="text-amber-500 font-black">{selectedDest?.title}</span> a été validé.</p>
-                  <Button className="w-full py-6 text-xl" onClick={() => setIsBooking(false)}>Terminer</Button>
-                </>
-              )}
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="relative bg-zinc-900/80 w-full max-w-4xl rounded-[80px] border border-white/10 overflow-hidden shadow-[0_0_200px_rgba(0,0,0,1)] flex flex-col md:flex-row backdrop-blur-3xl">
+              <div className="w-full md:w-1/2 relative h-64 md:h-auto">
+                <SafeImage src={selectedDest?.image} fallback={selectedDest?.fallback} alt={selectedDest?.title} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/90 hidden md:block" />
+              </div>
+              <div className="p-12 md:p-20 flex-1 text-center md:text-left flex flex-col justify-center">
+                {!bookingConfirmed ? (
+                  <>
+                    <div className="bg-amber-500 w-20 h-20 rounded-[32px] flex items-center justify-center mx-auto md:mx-0 mb-10 shadow-[0_20px_50px_rgba(245,158,11,0.4)]"><Fingerprint className="text-black w-10 h-10" /></div>
+                    <h3 className="text-4xl font-black mb-4 tracking-tighter uppercase leading-none text-white">AUTHENTIFICATION</h3>
+                    <p className="text-zinc-500 mb-12 font-light text-lg">Confirmez votre empreinte pour initialiser le saut vers <span className="text-amber-500 font-black">{selectedDest?.title}</span>.</p>
+                    <div className="space-y-6">
+                      <Button className="w-full py-6 text-xl" onClick={() => setBookingConfirmed(true)}>Confirmer l'empreinte</Button>
+                      <button onClick={() => setIsBooking(false)} className="text-zinc-700 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.5em]">Annuler l'Expédition</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="bg-green-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-10 shadow-[0_0_50px_rgba(34,197,94,0.3)]"><CheckCircle2 className="text-black w-10 h-10" /></motion.div>
+                    <h3 className="text-4xl font-black mb-4 tracking-tighter uppercase leading-none text-white">VOYAGE CONFIRMÉ</h3>
+                    <p className="text-zinc-400 mb-12 font-light text-lg">Votre passage vers <span className="text-amber-500 font-black">{selectedDest?.title}</span> a été validé. Préparez-vous pour le saut temporel.</p>
+                    <Button className="w-full py-6 text-xl" onClick={() => setIsBooking(false)}>Terminer</Button>
+                  </>
+                )}
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* PIED DE PAGE MONUMENTAL (FOOTER) */}
-      <footer className="mt-80 bg-zinc-950 border-t border-white/5 px-8 py-40">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
-            {/* Colonne 1: Identité */}
-            <div className="space-y-10 text-center lg:text-left">
-              <div className="flex items-center gap-6 justify-center lg:justify-start">
-                <div className="bg-amber-500 p-3 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                  <Clock className="text-black w-8 h-8" />
-                </div>
-                <span className="text-4xl font-black tracking-tighter uppercase tracking-[0.2em]">TIMETRAVEL</span>
+      {/* MODAL SERVICES INFORMATION */}
+      <AnimatePresence>
+        {activeService && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-8">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setActiveService(null)} />
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="relative bg-zinc-900 border border-white/10 p-16 rounded-[60px] max-w-xl text-center backdrop-blur-3xl shadow-2xl">
+              <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-8">
+                {serviceInfo[activeService].icon}
               </div>
-              <p className="text-zinc-500 text-lg font-light leading-relaxed max-w-sm mx-auto lg:mx-0">
-                La première agence certifiée par le Consortium Temporel Mondial. Redécouvrez l'histoire comme jamais auparavant.
-              </p>
-              <div className="flex gap-6 justify-center lg:justify-start">
-                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Instagram /></motion.a>
-                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Twitter /></motion.a>
-                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Linkedin /></motion.a>
-                <motion.a whileHover={{ y: -5, color: "#f59e0b" }} href="#" className="text-zinc-600 transition-colors"><Youtube /></motion.a>
-              </div>
-            </div>
+              <h3 className="text-4xl font-black mb-6 uppercase tracking-tighter">{serviceInfo[activeService].title}</h3>
+              <p className="text-zinc-400 text-lg leading-relaxed mb-12 font-light">{serviceInfo[activeService].desc}</p>
+              <Button className="w-full" onClick={() => setActiveService(null)}>Fermer</Button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-            {/* Colonne 2: Univers */}
-            <div className="space-y-8 text-center lg:text-left">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Exploration</h4>
-              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
-                <li className="hover:text-white cursor-pointer transition-colors">Notre Manifeste</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Vaisseaux & Technologie</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Sécurité Temporelle</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Galerie des Archives</li>
-              </ul>
+      {/* PIED DE PAGE INTERACTIF */}
+      <footer className="mt-40 bg-zinc-950 border-t border-white/5 px-8 py-40">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-24">
+          <div className="space-y-10">
+            <div className="flex items-center gap-4">
+              <Clock className="text-amber-500 w-8 h-8" />
+              <span className="text-3xl font-black tracking-tighter uppercase">TIMETRAVEL</span>
             </div>
-
-            {/* Colonne 3: Destinations */}
-            <div className="space-y-8 text-center lg:text-left">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Destinations</h4>
-              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
-                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Paris 1889</li>
-                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Crétacé Supérieur</li>
-                <li onClick={() => setView('home')} className="hover:text-white cursor-pointer transition-colors">Florence 1504</li>
-                <li className="hover:text-amber-500/50 cursor-not-allowed transition-colors italic">Égypte Antique (Bientôt)</li>
-              </ul>
-            </div>
-
-            {/* Colonne 4: Légal */}
-            <div className="space-y-8 text-center lg:text-left">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Consortium</h4>
-              <p className="text-xs text-zinc-600 font-medium leading-relaxed">
-                75007 Paris, Présent <br /> Secteur Alpha-1, Terminal Principal.
-              </p>
-              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-zinc-500">
-                <li className="hover:text-white cursor-pointer transition-colors">Protocoles de Paradoxe</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Charte Éthique</li>
-                <li className="hover:text-white cursor-pointer transition-colors">Assurance Relativiste</li>
-              </ul>
+            <p className="text-zinc-600 text-lg leading-relaxed">Redéfinir le futur en explorant le passé.</p>
+            <div className="flex gap-6">
+              <Instagram className="text-zinc-700 hover:text-amber-500 transition-colors cursor-pointer" />
+              <Twitter className="text-zinc-700 hover:text-amber-500 transition-colors cursor-pointer" />
+              <Linkedin className="text-zinc-700 hover:text-amber-500 transition-colors cursor-pointer" />
             </div>
           </div>
-
-          <div className="pt-20 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="text-[10px] font-black uppercase tracking-[0.8em] text-zinc-800">
-              © 2024 TIMETRAVEL AGENCY — IA M1/M2 FINAL PROJECT
-            </div>
-            <div className="flex gap-10 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">
-              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Confidentialité</span>
-              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Conditions</span>
-              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Cookies</span>
-            </div>
+          
+          <div className="space-y-8">
+             <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Expéditions</h4>
+             <ul className="space-y-4 text-sm font-bold uppercase text-zinc-500">
+               {destinations.map(d => (
+                 <li key={d.id} onClick={() => navigateToDest(d)} className="hover:text-white cursor-pointer transition-colors flex items-center gap-2">
+                   <ChevronRight className="w-3 h-3 text-amber-500" /> {d.title}
+                 </li>
+               ))}
+             </ul>
+          </div>
+          
+          <div className="space-y-8">
+             <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Expertise</h4>
+             <ul className="space-y-4 text-sm font-bold uppercase text-zinc-500">
+               <li onClick={() => setActiveService('paradox')} className="hover:text-white cursor-pointer transition-colors flex items-center gap-2">
+                 <ShieldAlert className="w-3 h-3 text-amber-500" /> Assurance Paradoxe
+               </li>
+               <li onClick={() => setActiveService('alpha')} className="hover:text-white cursor-pointer transition-colors flex items-center gap-2">
+                 <Rocket className="w-3 h-3 text-amber-500" /> Vaisseaux Alpha
+               </li>
+               <li onClick={() => setActiveService('guide')} className="hover:text-white cursor-pointer transition-colors flex items-center gap-2">
+                 <UserCheck className="w-3 h-3 text-amber-500" /> Guides Experts
+               </li>
+             </ul>
+          </div>
+          
+          <div className="space-y-8 text-right lg:text-left">
+             <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-amber-500">Contact</h4>
+             <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest leading-relaxed">
+               Secteur Alpha-1 <br /> 75007 Paris, Présent <br /><br />
+               <span className="text-zinc-800">Support Temporel 24/7</span>
+             </p>
           </div>
         </div>
       </footer>
