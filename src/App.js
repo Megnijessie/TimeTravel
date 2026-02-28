@@ -1,38 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Clock, 
-  MapPin, 
-  Send, 
-  ChevronRight, 
-  Sparkles, 
-  Info, 
-  Calendar, 
-  Users, 
-  MessageSquare, 
+import {
+  Clock,
+  Send,
+  ChevronRight,
+  MessageSquare,
   X,
-  Palette,
   Trees,
   TowerControl as Tower,
   ChevronLeft,
   CheckCircle2,
-  History,
-  Zap,
-  Flame,
-  ShieldCheck,
-  CreditCard,
-  Ticket,
   Fingerprint,
   Activity,
-  Globe,
   Compass,
   Instagram,
   Twitter,
-  Linkedin,
-  Youtube,
-  ShieldAlert,
-  Rocket,
-  UserCheck
-} from 'lucide-react';
+  Linkedin
+} from "lucide-react";
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 
 // --- CONFIGURATION ---
@@ -285,6 +268,11 @@ const ChatBot = () => {
                   <div className={`max-w-[85%] p-5 rounded-[28px] text-sm ${m.role === 'user' ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 text-zinc-300'}`}>{m.content}</div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="text-amber-500 text-xs animate-pulse">
+                  Assistant réfléchit...
+                </div>
+              )}
               <div ref={chatEndRef} />
             </div>
             <div className="p-8 bg-black/40 flex gap-4">
