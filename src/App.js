@@ -14,7 +14,11 @@ import {
   Compass,
   Instagram,
   Twitter,
-  Linkedin
+  Linkedin,
+  Palette,
+  ShieldAlert,
+  Rocket,
+  UserCheck,
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 
